@@ -21,7 +21,10 @@ export function LandingPage() {
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
   const carouselRef = useRef<HTMLDivElement>(null)
-  const totalSlides = 3 // 6 cards total, showing 4 at a time, so 3 slides (0, 1, 2)
+  const totalCards = 6 // Total number of cards
+  const [cardsPerView, setCardsPerView] = useState(4) // Cards visible at once
+  const [totalSlides, setTotalSlides] = useState(2) // Total slides needed
+  const [windowWidth, setWindowWidth] = useState(0) // Track window width for responsive calculations
 
   // Refs for GSAP animations
   const heroRef = useRef<HTMLElement>(null)
@@ -30,6 +33,60 @@ export function LandingPage() {
   const detailsRef = useRef<HTMLElement>(null)
   const carouselRef2 = useRef<HTMLElement>(null)
   const statsRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  // Calculate responsive carousel settings
+  const updateCarouselSettings = () => {
+    const width = window.innerWidth
+    setWindowWidth(width)
+    let newCardsPerView = 4
+    
+    if (width < 640) {
+      newCardsPerView = 1
+    } else if (width < 768) {
+      newCardsPerView = 2
+    } else if (width < 1024) {
+      newCardsPerView = 3
+    } else {
+      newCardsPerView = 4
+    }
+    
+    setCardsPerView(newCardsPerView)
+    const newTotalSlides = Math.max(1, totalCards - newCardsPerView + 1)
+    setTotalSlides(newTotalSlides)
+    
+    // Reset to first slide if current slide is out of bounds
+    if (currentSlide >= newTotalSlides) {
+      setCurrentSlide(0)
+      setCanScrollLeft(false)
+      setCanScrollRight(newTotalSlides > 1)
+    } else {
+      setCanScrollLeft(currentSlide > 0)
+      setCanScrollRight(currentSlide < newTotalSlides - 1)
+    }
+  }
+
+  // Calculate transform offset based on screen size
+  const getTransformOffset = () => {
+    const width = windowWidth || (typeof window !== 'undefined' ? window.innerWidth : 1024)
+    let tileWidth = 320
+    let gap = 24
+    
+    if (width < 640) {
+      tileWidth = Math.min(width * 0.9, 300)
+      gap = 12
+    } else if (width < 768) {
+      tileWidth = 260
+      gap = 16
+    } else if (width < 1024) {
+      tileWidth = 280
+      gap = 24
+    } else {
+      tileWidth = 320
+      gap = 24
+    }
+    
+    return currentSlide * (tileWidth + gap)
+  }
 
   // Carousel scroll functions
   const scrollCarousel = (direction: 'left' | 'right') => {
@@ -42,6 +99,18 @@ export function LandingPage() {
       setCanScrollRight(newSlide < totalSlides - 1)
     }
   }
+
+  // Initialize and handle responsive carousel
+  useEffect(() => {
+    updateCarouselSettings()
+    
+    const handleResize = () => {
+      updateCarouselSettings()
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [currentSlide])
 
   // GSAP animations setup
   useEffect(() => {
@@ -528,7 +597,7 @@ export function LandingPage() {
             <div 
               ref={carouselRef}
               className="rail"
-              style={{ transform: `translateX(-${currentSlide === 2 ? 1032 : currentSlide * 344}px)` }}
+              style={{ transform: `translateX(-${getTransformOffset()}px)` }}
             >
               <article className="tile">
                 <div className="thumb relative overflow-hidden" style={{display: 'block'}}>

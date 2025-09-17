@@ -330,6 +330,7 @@
     display: flex;
     gap: 24px;
     transition: transform 0.5s cubic-bezier(.2,.7,.2,1);
+    will-change: transform;
   }
   
   .tile {
@@ -340,6 +341,37 @@
     width: 320px;
     min-width: 320px;
     flex-shrink: 0;
+  }
+  
+  /* Responsive carousel adjustments */
+  @media (max-width: 1024px) {
+    .tile {
+      width: 280px;
+      min-width: 280px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .tile {
+      width: 260px;
+      min-width: 260px;
+    }
+    
+    .rail {
+      gap: 16px;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .tile {
+      width: 90vw;
+      min-width: 90vw;
+      max-width: 300px;
+    }
+    
+    .rail {
+      gap: 12px;
+    }
   }
   
   .thumb {
@@ -541,5 +573,32 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Mobile viewport height handling for chat sidebar */
+  :root {
+    --vh: 1vh;
+  }
+  
+  /* Set the viewport height variable on mobile */
+  @media (max-width: 768px) {
+    :root {
+      --vh: calc(var(--vh, 1vh) * 100);
+    }
+  }
+  
+  /* Mobile chat sidebar improvements */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+  
+  /* Prevent mobile zoom on input focus */
+  @media (max-width: 768px) {
+    input[type="text"], 
+    input[type="email"], 
+    input[type="password"], 
+    textarea {
+      font-size: 16px !important;
+    }
   }
 }

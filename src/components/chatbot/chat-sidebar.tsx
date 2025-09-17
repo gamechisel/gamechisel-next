@@ -34,6 +34,7 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [viewportHeight, setViewportHeight] = useState("100vh")
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -72,6 +73,26 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       setTimeout(() => inputRef.current?.focus(), 100)
     }
   }, [isOpen])
+
+  // Handle mobile viewport height changes (keyboard appearance)
+  useEffect(() => {
+    const updateViewportHeight = () => {
+      const vh = window.innerHeight * 0.01
+      setViewportHeight(`${window.innerHeight}px`)
+    }
+
+    // Set initial height
+    updateViewportHeight()
+
+    // Listen for resize events (keyboard show/hide on mobile)
+    window.addEventListener('resize', updateViewportHeight)
+    window.addEventListener('orientationchange', updateViewportHeight)
+
+    return () => {
+      window.removeEventListener('resize', updateViewportHeight)
+      window.removeEventListener('orientationchange', updateViewportHeight)
+    }
+  }, [])
 
   const clearChat = () => {
     setMessages([])
@@ -220,7 +241,11 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-[420px] max-w-[90vw] bg-background border-l shadow-xl z-[70] flex flex-col"
+            className="fixed right-0 top-0 w-[420px] max-w-[90vw] bg-background border-l shadow-xl z-[70] flex flex-col"
+            style={{
+              height: viewportHeight,
+              maxHeight: viewportHeight
+            }}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b">
@@ -333,7 +358,7 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
             <Separator />
 
             {/* Input */}
-            <div className="p-4">
+            <div className="p-4 pb-safe">
               <div className="flex gap-2">
                 <Input
                   ref={inputRef}
@@ -343,6 +368,9 @@ export function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                   placeholder="Ask about GameChisel..."
                   disabled={isLoading}
                   className="flex-1"
+                  style={{
+                    fontSize: '16px' // Prevents zoom on iOS
+                  }}
                 />
                 <Button
                   onClick={sendMessage}
